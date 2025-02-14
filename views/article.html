@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>文章详情</title>
+    <!-- 引入 gardevoir 的 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gardevoir" />
+    <!-- 引入 highlight.js 的 CSS 文件 -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css"
+    />
+    <!-- https://cdn.jsdelivr.net/npm/highlight.js/styles/atom-one-dark.min.css -->
+    <style type="text/css">
+      /* 自定义样式 */
+      body {
+        /* font-family: Arial, sans-serif; */
+        margin: 20px;
+        -ms-text-size-adjust: 100%;
+        -webkit-text-size-adjust: 100%;
+        margin: 0;
+        color: #1f2328;
+        background-color: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+          Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+        font-size: 16px;
+        line-height: 1.5;
+        word-wrap: break-word;
+        /* 网格背景 */
+        /* background-size: 20px 20px;
+        background-position: center center;
+        background-image: linear-gradient(
+            to right,
+            #cbd5e1 1px,
+            transparent 1px
+          ),
+          linear-gradient(to bottom, #cbd5e1 1px, transparent 1px); */
+        /* 点阵背景 */
+        /* background-size: 20px 20px;
+        background-position: center center;
+        background-image: radial-gradient(circle, #cbd5e1 1px, #fff 1px); */
+      }
+      .article-title {
+        text-align: center;
+        font-size: 24px;
+        /* margin-bottom: 20px; */
+      }
+      .char-counter {
+        display: flex;
+        justify-content: center;
+        color: #aaa;
+        font-size: 11px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+      .markdown-body {
+        max-width: 800px;
+        margin: 0 auto;
+        margin-bottom: 20px;
+        padding: 0 20px; /* 默认情况下，为左右两边增加20px的padding */
+      }
+
+      @media (max-width: 768px) {
+        .markdown-body {
+          padding: 0 15px; /* 在手机端，为左右两边增加15px的padding */
+        }
+      }
+
+      @media (max-width: 480px) {
+        .markdown-body {
+          padding: 0 15px; /* 在更小的屏幕上，为左右两边增加10px的padding */
+        }
+      }
+
+      pre code.hljs {
+        display: block;
+        overflow-x: auto;
+        padding: 1em;
+      }
+      code.hljs {
+        padding: 3px 5px;
+      }
+      .hljs {
+        color: #abb2bf;
+        background: #282c34;
+      }
+      .hljs-comment,
+      .hljs-quote {
+        color: #5c6370;
+        font-style: italic;
+      }
+      .hljs-doctag,
+      .hljs-formula,
+      .hljs-keyword {
+        color: #c678dd;
+      }
+      .hljs-deletion,
+      .hljs-name,
+      .hljs-section,
+      .hljs-selector-tag,
+      .hljs-subst {
+        color: #e06c75;
+      }
+      .hljs-literal {
+        color: #56b6c2;
+      }
+      .hljs-addition,
+      .hljs-attribute,
+      .hljs-meta .hljs-string,
+      .hljs-regexp,
+      .hljs-string {
+        color: #98c379;
+      }
+      .hljs-attr,
+      .hljs-number,
+      .hljs-selector-attr,
+      .hljs-selector-class,
+      .hljs-selector-pseudo,
+      .hljs-template-variable,
+      .hljs-type,
+      .hljs-variable {
+        color: #d19a66;
+      }
+      .hljs-bullet,
+      .hljs-link,
+      .hljs-meta,
+      .hljs-selector-id,
+      .hljs-symbol,
+      .hljs-title {
+        color: #61aeee;
+      }
+      .hljs-built_in,
+      .hljs-class .hljs-title,
+      .hljs-title.class_ {
+        color: #e6c07b;
+      }
+      .hljs-emphasis {
+        font-style: italic;
+      }
+      .hljs-strong {
+        font-weight: 700;
+      }
+      .hljs-link {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="article-title" id="article-title"></div>
+    <div class="char-counter" id="char-counter"></div>
+    <div id="article-content" class="markdown-body"></div>
+
+    <!-- 引入 marked 和 highlight.js 的 JavaScript 文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-highlight"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+      // 获取文章ID
+      const articleId = new URLSearchParams(window.location.search).get("id");
+
+      // 从 data.json 中获取文章内容
+      fetch("/data.json")
+        .then((response) => response.json())
+        .then((data) => {
+          const article = data.blocks.find((item) => item.id == articleId);
+          if (article) {
+            const content = article.content;
+            // 判断是否为日记（以 # 📆 开头）或笔记（以 # 📘 开头）
+            const isNote = content.startsWith("# 📘");
+            const isDiary = content.startsWith("# 📆");
+
+            // 获取标题
+            let title = "";
+            if (isNote) {
+              title = content
+                .split("\n")[0]
+                .replace(/^#\s*📘\s*/, "")
+                .trim();
+            } else if (isDiary) {
+              title = content
+                .split("\n")[0]
+                .replace(/^#\s*📆\s*/, "")
+                .trim();
+            } else {
+              title = "未知类型";
+            }
+
+            // 获取内容（去掉第一行标题）
+            const contentWithoutTitle = content.split("\n").slice(1).join("\n");
+
+            // 使用 marked 解析 Markdown 内容
+            const html = marked.parse(contentWithoutTitle, {
+              breaks: true,
+              highlight: function (code, lang) {
+                const language = hljs.getLanguage(lang) ? lang : "plaintext";
+                return hljs.highlight(code, { language }).value;
+              },
+            });
+
+            // 设置标题和图标
+            document.getElementById("article-title").innerHTML = `${
+              isNote ? "📘" : isDiary ? "📆" : ""
+            } ${title}`;
+            document.getElementById("article-content").innerHTML = html;
+            hljs.highlightAll(); // 手动初始化 highlight.js
+
+            // 更新字符计数器
+            updateCharCounter(article);
+          } else {
+            document.getElementById("article-title").innerText = "文章未找到";
+            document.getElementById("article-content").innerHTML = "";
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching data:", error);
+          document.getElementById("article-title").innerText = "加载文章时出错";
+          document.getElementById("article-content").innerHTML = "";
+        });
+
+      // 更新字符计数器
+      function updateCharCounter(article) {
+        const charCounterElement = document.getElementById("char-counter");
+        const date = new Date(article.date).toISOString().split("T")[0];
+        const wordCount = article.content.length;
+        charCounterElement.innerText = `${date} ${wordCount}字`;
+      }
+    </script>
+  </body>
+</html>

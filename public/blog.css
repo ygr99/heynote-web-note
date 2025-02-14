@@ -1,0 +1,267 @@
+/* 所有的基础样式 */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 20px;
+    background: linear-gradient(to bottom, #e6f3ff, #f5f9ff);
+}
+
+/* 导航栏样式 */
+.navbar {
+    background-color: #a0c4ff;
+    overflow: hidden;
+    padding: 10px 0;
+    text-align: center;
+    border-radius: 5px;
+}
+
+/* 导航链接样式 */
+.nav-link {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    margin: 0 5px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    border-radius: 5px;
+}
+
+/* 鼠标悬停时的样式 */
+.nav-link:hover {
+    background-color: #80aaff;
+}
+
+/* 当前选中的链接样式 */
+.nav-link.active {
+    background-color: #6495ed;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 0 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 0 10px;
+    }
+}
+
+a {
+    color: #1E81F8;
+}
+
+/* 热力图包裹容器样式 */
+.heatmap-wrapper {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+}
+
+/* 星期标签容器样式 */
+.week-labels {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: calc(7 * 18px + 6 * 5px);
+    margin-right: 10px;
+    padding-top: 9px;
+}
+
+/* 星期标签样式 */
+.week-label {
+    font-size: 12px;
+    color: var(--gray-500);
+    text-align: right;
+    height: 18px;
+    line-height: 18px;
+}
+
+/* 热力图容器样式 */
+.relitu-container {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    margin: 1em 0;
+    position: relative;
+}
+
+/* 热力图列样式 */
+.grid-column {
+    display: grid;
+    grid-template-rows: repeat(7, 18px);
+    gap: 5px;
+    margin-right: 5px;
+}
+
+/* 热力图格子样式 */
+.grid-item {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    min-height: 18px;
+    position: relative;
+}
+
+/* 热力图格子信息样式 */
+.item-info {
+    font-size: 10px;
+    height: 100%;
+    width: 18px;
+    background-color: #E9ECEF;
+    border-radius: .25rem;
+}
+
+/* 摘要样式 */
+.summary {
+    font-size: 16px;
+    color: #333;
+}
+
+/* 新增样式 */
+.stat-number {
+    font-weight: bold;
+    color: #9fc6f5;
+}
+
+/* 笔记列表样式 */
+#note-list {
+    margin-top: 3px;
+}
+
+.note-year {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #1E81F8;
+}
+
+.note-month {
+    font-size: 1em;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color: #1E81F8;
+}
+
+.note-item {
+    margin-bottom: 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.note-item:hover {
+    background-color: #f0f7ff;
+}
+
+.note-item a {
+    color: #1E81F8;
+    text-decoration: none;
+    display: block;
+}
+
+.note-item a:hover {
+    text-decoration: underline;
+}
+
+/* 加载动画样式 */
+#loading-spinner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.grid-item.invisible {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* 标题样式 */
+h3 {
+    color: #1E81F8;
+    margin: 30px 0 15px 0;
+}
+
+/* 年份选择框样式 */
+#year-select {
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-left: 10px;
+    font-size: 14px;
+    color: #333;
+}
+
+#year-select:focus {
+    outline: none;
+    border-color: #1E81F8;
+}
+
+/* 修改自定义主题样式 */
+.tippy-box[data-theme~="custom"] {
+    background-color: #fff;
+    color: #333;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.tippy-box[data-theme~="custom"] .tippy-content {
+    background-color: #fff;
+    white-space: nowrap;
+}
+
+.tippy-box[data-theme~="custom"] a {
+    color: #1E81F8;
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1.4;
+    display: inline-block;
+}
+
+/* 调整链接前的短横线样式 */
+.tippy-box[data-theme~="custom"] .tippy-content br {
+    display: block;
+    content: "";
+}
+
+.tippy-box[data-theme~="custom"] a:hover {
+    color: #ff9900 !important;
+    text-decoration: underline !important;
+}
+
+.tippy-box[data-theme~="custom"][data-placement^="top"]>.tippy-arrow::before {
+    border-top-color: #fff;
+}

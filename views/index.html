@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real-Time Notepad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 添加 CodeMirror 相关依赖 -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/eclipse.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/markdown-fold.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.css"
+    />
+    <!-- 添加更多 CodeMirror 插件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/continuelist.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/mode/overlay.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/gfm/gfm.min.js"></script>
+    <style>
+      .CodeMirror {
+        height: 100%;
+        font-size: 16px;
+      }
+      .cm-header {
+        font-weight: bold;
+      }
+      .block {
+        border-bottom: 1px solid #eee;
+      }
+      .block .CodeMirror {
+        height: auto;
+        min-height: 50px;
+      }
+      /* 修改主题样式，添加行号列的样式 */
+      .block.theme-white .CodeMirror {
+        background: white;
+      }
+      .block.theme-white .CodeMirror-gutters {
+        background: white;
+        border-right: 1px solid #ddd;
+      }
+
+      .block.theme-blue .CodeMirror {
+        background: #f0f7ff;
+      }
+      .block.theme-blue .CodeMirror-gutters {
+        background: #f0f7ff;
+        border-right: 1px solid #cce0ff;
+      }
+
+      /* 统一设置行号的颜色 */
+      .CodeMirror-linenumber {
+        color: #999;
+      }
+
+      /* 设置折叠图标的颜色 */
+      .CodeMirror-foldgutter-open:after {
+        color: #999;
+      }
+      .CodeMirror-foldgutter-folded:after {
+        color: #999;
+      }
+
+      /* Markdown 语法高亮样式 */
+      /* 普通列表用灰色 */
+      .CodeMirror.cm-s-eclipse .CodeMirror-code span.cm-variable-2 {
+        color: #4b5563 !important;
+      }
+
+      /* 任务列表使用蓝色 - 针对任务列表的特殊结构 */
+      .CodeMirror.cm-s-eclipse
+        .CodeMirror-code
+        span.cm-meta
+        + span.cm-variable-2 {
+        color: #4b5563 !important;
+      }
+      .CodeMirror.cm-s-eclipse .CodeMirror-code span.cm-meta {
+        color: #2563eb !important;
+      }
+
+      .cm-header-1,
+      .cm-header-2,
+      .cm-header-3,
+      .cm-header {
+        color: #2563eb;
+        font-weight: normal;
+        font-size: inherit;
+      }
+
+      .cm-strong {
+        color: #111;
+        font-weight: normal;
+      }
+      .cm-em {
+        color: #111;
+        font-style: normal;
+      }
+
+      .cm-link {
+        color: #2563eb;
+        text-decoration: none;
+      }
+      .cm-url {
+        color: #60a5fa;
+      }
+
+      .cm-quote {
+        color: #059669;
+        font-style: normal;
+      }
+
+      .cm-variable-3 {
+        color: #4b5563;
+      } /* 有序列表 */
+
+      .cm-comment {
+        color: #6b7280;
+        font-style: normal;
+      }
+      .cm-code {
+        color: #ef4444;
+        background: none;
+        padding: 0;
+        border-radius: 0;
+      }
+
+      /* 代码块样式 */
+      .cm-comment.cm-code {
+        color: #059669;
+        background: none;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <div class="max-w-2xl mx-auto">
+      <!-- Buttons at the top -->
+      <div class="space-x-2 mb-4">
+        <button
+          id="blogButton"
+          class="px-4 py-2 bg-pink-500 text-white rounded-lg"
+        >
+          Blog
+        </button>
+        <button
+          id="insertBlockBefore"
+          class="px-4 py-2 bg-blue-500 text-white rounded-lg"
+        >
+          Before
+        </button>
+        <button
+          id="insertBlockAfter"
+          class="px-4 py-2 bg-blue-500 text-white rounded-lg"
+        >
+          After
+        </button>
+        <button
+          id="insertDate"
+          class="px-4 py-2 bg-purple-500 text-white rounded-lg"
+        >
+          Diary
+        </button>
+        <button
+          id="insertNote"
+          class="px-4 py-2 bg-indigo-500 text-white rounded-lg"
+        >
+          Note
+        </button>
+        <button
+          id="insertTime"
+          class="px-4 py-2 bg-green-500 text-white rounded-lg"
+        >
+          Time
+        </button>
+        <button
+          id="foldAll"
+          class="px-4 py-2 bg-orange-500 text-white rounded-lg"
+        >
+          Fold
+        </button>
+      </div>
+
+      <!-- Notepad container -->
+      <div id="notepad" class="w-full h-[90vh] bg-white border overflow-y-auto">
+        <!-- Blocks will be dynamically inserted here -->
+      </div>
+    </div>
+
+    <script>
+      const notepad = document.getElementById("notepad");
+      const insertBlockBeforeButton =
+        document.getElementById("insertBlockBefore");
+      const insertBlockAfterButton =
+        document.getElementById("insertBlockAfter");
+      const insertTimeButton = document.getElementById("insertTime");
+      const insertDateButton = document.getElementById("insertDate");
+      const insertNoteButton = document.getElementById("insertNote");
+      const foldAllButton = document.getElementById("foldAll");
+
+      // Function to escape HTML tags
+      function escapeHtml(unsafe) {
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      // Load data from server
+      fetch("/data")
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.blocks && data.blocks.length > 0) {
+            data.blocks.forEach((block) => {
+              addBlock(block.content);
+            });
+          } else {
+            addBlock("Start typing here...");
+          }
+          // 确保加载完所有块后刷新主题
+          refreshBlockThemes();
+
+          // 将光标设置到第一个块的开始位置
+          if (editors.length > 0) {
+            const firstEditor = editors[0];
+            firstEditor.focus();
+            firstEditor.setCursor({
+              line: 0,
+              ch: 0,
+            });
+          }
+        });
+
+      let editors = []; // 存储所有的 CodeMirror 实例
+      let activeEditor = null;
+
+      // 添加一个变量来跟踪折叠状态
+      let isFolded = false;
+
+      // 修改 refreshBlockThemes 函数
+      function refreshBlockThemes() {
+        const blocks = notepad.querySelectorAll(".block");
+        blocks.forEach((block, index) => {
+          block.className = `block ${
+            index % 2 === 0 ? "theme-white" : "theme-blue"
+          }`;
+          editors[index].refresh();
+        });
+      }
+
+      // 添加 UUID 生成函数
+      function generateUUID() {
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+          /[xy]/g,
+          function (c) {
+            var r = (Math.random() * 16) | 0,
+              v = c == "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+          }
+        );
+      }
+
+      // 修改 saveData 函数
+      function saveData() {
+        const blocks = [];
+        const blockElements = notepad.querySelectorAll(".block");
+
+        blockElements.forEach((blockDiv, index) => {
+          const editor = editors[index];
+          // 获取或创建 block 的 id
+          let blockId = blockDiv.dataset.blockId;
+          if (!blockId) {
+            blockId = generateUUID();
+            blockDiv.dataset.blockId = blockId;
+          }
+
+          blocks.push({
+            id: blockId,
+            content: editor.getValue(),
+            date: new Date().toISOString().split("T")[0],
+          });
+        });
+
+        fetch("/data", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ blocks }),
+        });
+      }
+
+      // 修改 addBlock 函数，添加 id 支持
+      function addBlock(content, referenceBlock = null, insertBefore = false) {
+        const blockDiv = document.createElement("div");
+        blockDiv.className = "block";
+        blockDiv.dataset.blockId = generateUUID(); // 为新块生成 UUID
+
+        const textarea = document.createElement("textarea");
+        blockDiv.appendChild(textarea);
+
+        // 获取参考块在 DOM 中的索引
+        let referenceIndex = -1;
+        if (referenceBlock) {
+          const blocks = Array.from(notepad.querySelectorAll(".block"));
+          referenceIndex = blocks.indexOf(referenceBlock);
+        }
+
+        if (referenceBlock) {
+          if (insertBefore) {
+            notepad.insertBefore(blockDiv, referenceBlock);
+          } else {
+            notepad.insertBefore(blockDiv, referenceBlock.nextSibling);
+          }
+        } else {
+          notepad.appendChild(blockDiv);
+        }
+
+        const editor = CodeMirror.fromTextArea(textarea, {
+          mode: "gfm",
+          theme: "eclipse",
+          lineNumbers: true,
+          lineWrapping: true,
+          foldGutter: true,
+          gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+          foldOptions: {
+            widget: (from, to) => {
+              const lines = to.line - from.line;
+              return lines > 0 ? ` ... ${lines} lines` : " ...";
+            },
+          },
+          extraKeys: {
+            Enter: "newlineAndIndentContinueMarkdownList",
+            "Ctrl-Q": function (cm) {
+              cm.foldCode(cm.getCursor());
+            },
+            Backspace: function (cm) {
+              const cursor = cm.getCursor();
+              const line = cm.getLine(cursor.line);
+
+              if (line === "" && cursor.ch === 0) {
+                if (cm.getValue().trim() === "" && editors.length > 1) {
+                  const index = editors.indexOf(cm);
+                  if (index > -1) {
+                    editors.splice(index, 1);
+                    blockDiv.remove();
+                    saveData(); // 在删除块时保存
+
+                    refreshBlockThemes();
+
+                    if (editors.length > 0) {
+                      const nextIndex = Math.min(index, editors.length - 1);
+                      const nextEditor = editors[nextIndex];
+                      nextEditor.focus();
+                      nextEditor.setCursor({
+                        line: 0,
+                        ch: 0,
+                      });
+                    }
+                  }
+                  return;
+                }
+              }
+              return CodeMirror.Pass;
+            },
+            Tab: function (cm) {
+              if (cm.somethingSelected()) {
+                cm.indentSelection("add");
+              } else {
+                cm.replaceSelection("  ");
+              }
+            },
+            "Shift-Tab": function (cm) {
+              cm.indentSelection("subtract");
+            },
+            "Ctrl-Enter": function (cm) {
+              const currentBlock = cm.getWrapperElement().parentNode;
+              addBlock("", currentBlock, false);
+              saveData(); // 在添加新块时保存
+            },
+            "Alt-Enter": function (cm) {
+              const currentBlock = cm.getWrapperElement().parentNode;
+              addBlock("", currentBlock, true);
+              saveData(); // 在添加新块时保存
+            },
+            Up: function (cm) {
+              const cursor = cm.getCursor();
+              if (cursor.line === 0) {
+                const index = editors.indexOf(cm);
+                if (index > 0) {
+                  const prevEditor = editors[index - 1];
+                  const lastLine = prevEditor.lastLine();
+                  prevEditor.focus();
+                  prevEditor.setCursor({
+                    line: lastLine,
+                    ch: prevEditor.getLine(lastLine).length,
+                  });
+                  return;
+                }
+              }
+              return CodeMirror.Pass;
+            },
+            Down: function (cm) {
+              const cursor = cm.getCursor();
+              if (cursor.line === cm.lastLine()) {
+                const index = editors.indexOf(cm);
+                if (index < editors.length - 1) {
+                  const nextEditor = editors[index + 1];
+                  nextEditor.focus();
+                  nextEditor.setCursor({
+                    line: 0,
+                    ch: 0,
+                  });
+                  return;
+                }
+              }
+              return CodeMirror.Pass;
+            },
+          },
+        });
+
+        editor.setValue(content);
+
+        // 根据块在 DOM 中的位置插入编辑器
+        if (referenceBlock && insertBefore) {
+          editors.splice(referenceIndex, 0, editor);
+        } else if (referenceBlock) {
+          editors.splice(referenceIndex + 1, 0, editor);
+        } else {
+          editors.push(editor);
+        }
+
+        editor.on("focus", () => {
+          activeEditor = editor;
+        });
+
+        editor.on("blur", () => {
+          setTimeout(() => {
+            if (!editors.some((ed) => ed.hasFocus())) {
+              activeEditor = null;
+            }
+          }, 100);
+        });
+
+        editor.on("change", () => {
+          saveData(); // 在内容变化时保存
+        });
+
+        editor.refresh();
+        editor.focus();
+
+        refreshBlockThemes();
+
+        return blockDiv;
+      }
+
+      // 生成日期字符串的函数
+      function getFormattedDate() {
+        const timestamp = Date.now();
+        const date = new Date(timestamp);
+
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1; // getMonth() 返回的月份是从 0 开始的，所以需要 +1
+        const day = date.getDate().toString().padStart(2, "0"); // 确保日期是两位数
+        const dayOfWeek = date.getDay(); // 获取星期几，返回值是 0 到 6
+
+        // 定义星期数组
+        const weekDay = ["日", "一", "二", "三", "四", "五", "六"];
+
+        // 获取星期的名称
+        const weekDayName = weekDay[dayOfWeek];
+
+        // 获取今年第几天
+        const startOfYear = new Date(year, 0, 1);
+        const dayOfYear = Math.ceil(
+          (date - startOfYear) / (1000 * 60 * 60 * 24)
+        );
+
+        // 获取本年度第几周
+        const weekNumber = Math.floor((dayOfYear - 1) / 7) + 1;
+
+        // 格式化日期字符串
+        return `# 📆 ${year}年${month}月${day}日 周${weekDayName}${weekNumber}周`;
+      }
+
+      // 添加时间格式化函数
+      function getFormattedTime() {
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, "0");
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        return `${hours}:${minutes}`;
+      }
+
+      // Insert a new block before the current block
+      insertBlockBeforeButton.addEventListener("click", () => {
+        if (activeEditor) {
+          const currentBlock = activeEditor.getWrapperElement().parentNode;
+          addBlock("", currentBlock, true);
+        } else if (notepad.firstElementChild) {
+          // 如果没有活动的编辑器但有块存在，在第一个块之前添加
+          addBlock("", notepad.firstElementChild, true);
+        } else {
+          // 如果没有任何块，直接添加一个新块
+          addBlock("");
+        }
+      });
+
+      // Insert a new block after the current block
+      insertBlockAfterButton.addEventListener("click", () => {
+        if (activeEditor) {
+          const currentBlock = activeEditor.getWrapperElement().parentNode;
+          addBlock("", currentBlock, false);
+        } else if (notepad.lastElementChild) {
+          // 如果没有活动的编辑器但有块存在，在最后一个块之后添加
+          addBlock("", notepad.lastElementChild, false);
+        } else {
+          // 如果没有任何块，直接添加一个新块
+          addBlock("");
+        }
+      });
+
+      // Insert current time at the cursor position
+      insertTimeButton.addEventListener("click", () => {
+        if (activeEditor) {
+          const timeString = getFormattedTime() + " ";
+          const cursor = activeEditor.getCursor();
+          activeEditor.replaceRange(timeString, cursor);
+          activeEditor.focus();
+        }
+      });
+
+      // Insert current date at the cursor position
+      insertDateButton.addEventListener("click", () => {
+        if (activeEditor) {
+          const dateString = getFormattedDate() + " ";
+          const cursor = activeEditor.getCursor();
+          activeEditor.replaceRange(dateString, cursor);
+          activeEditor.focus();
+        }
+      });
+
+      // Insert note at the cursor position
+      insertNoteButton.addEventListener("click", () => {
+        if (activeEditor) {
+          const noteString = "# 📘 ";
+          const cursor = activeEditor.getCursor();
+          activeEditor.replaceRange(noteString, cursor);
+          activeEditor.focus();
+        }
+      });
+
+      // 修改折叠按钮点击事件
+      foldAllButton.addEventListener("click", () => {
+        isFolded = !isFolded; // 切换状态
+
+        editors.forEach((editor) => {
+          const lineCount = editor.lineCount();
+
+          for (let i = 0; i < lineCount; i++) {
+            const line = editor.getLine(i);
+            // 如果是一级标题（以单个 # 开头）
+            if (line.trim().match(/^#\s+/)) {
+              if (isFolded) {
+                // 折叠
+                editor.foldCode({ line: i, ch: 0 }, null, "fold");
+              } else {
+                // 展开
+                editor.foldCode({ line: i, ch: 0 }, null, "unfold");
+              }
+            }
+          }
+        });
+
+        // 更新按钮文本
+        foldAllButton.textContent = isFolded ? "Unfold" : "Fold";
+      });
+
+      // 添加 Blog 按钮点击事件
+      const blogButton = document.getElementById("blogButton");
+      blogButton.addEventListener("click", () => {
+        window.location.href = "blog.html";
+      });
+    </script>
+  </body>
+</html>
